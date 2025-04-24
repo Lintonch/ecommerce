@@ -1,7 +1,9 @@
 package com.ecom.service.impl;
 
 import java.util.Date;
+import java.util.List;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -19,6 +21,9 @@ import lombok.RequiredArgsConstructor;
 public class UserServiceImpl implements UserService {
 
 	private final UserRepository userRepository;
+	
+	private final BCryptPasswordEncoder passwordEncoder;
+
 
 	@Override
 	@Transactional
@@ -30,12 +35,26 @@ public class UserServiceImpl implements UserService {
 		// Set role to USER if null
 		String role = StringUtils.hasText(dto.getRole()) ? dto.getRole() : "USER";
 
-		User user = User.builder().name(dto.getName()).email(dto.getEmail()).password(dto.getPassword()) // TODO:
+		User user = User.builder().name(dto.getName()).email(dto.getEmail())
+				.password(passwordEncoder.encode(dto.getPassword())) // TODO:
 																											// Encrypt
 																											// in future
 				.phone(dto.getPhone()).role(role).createdAt(new Date()).updatedAt(new Date()).build();
 
 		userRepository.save(user);
 	}
+
+
+	@Override
+	public List<User> getAllUsers() {
+		return userRepository.findAll();
+	}
+
+
+	@Override
+	public User getUserById(Long id) {
+		return userRepository.findById(id)
+		        .orElseThrow(() -> new RuntimeException("User not found with ID: " + id));
+		}
 
 }
